@@ -3,7 +3,6 @@
 // 引入 Node.js 的 http 模块
 import http from 'http'
 import * as env from '../../index.mjs'
-import { en } from 'element-plus/es/locales.mjs';
 
 // 创建 HTTP 服务器
 const server = http.createServer((req, res) => {
@@ -22,16 +21,27 @@ async function handleApiRequest(req, res) {
   switch(req.url) {
     case '/api/node/exec':
       const nodeName = jsonData.nodeName;
-      console.log({nodeName});
       const cmd = jsonData.cmd;
       if (!nodeName || !env[nodeName]) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ data: `module ${nodeName} is not exists` }));
         return;
       }
+      if (!cmd) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ data: `cmd is empty` }));
+        return;
+      }
+
+      const nodeEnv = await env[nodeName].info()
+      const execCmd = `${nodeEnv.path} ${cmd}`
+      $.verbose = true
+      console.log({execCmd})
+      const execRes = await $`cd / && ${execCmd}`
+      $.verbose = false
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ data: 'ok' }));
+      res.end(JSON.stringify({ data: execRes }));
       break;
     default:
       res.writeHead(404, { 'Content-Type': 'application/json' });
