@@ -33,15 +33,16 @@ async function handleApiRequest(req, res) {
         return;
       }
 
+      const cmdArgs = cmd.split(/\s+/)
       const nodeEnv = await env[nodeName].info()
-      const execCmd = `${nodeEnv.path} ${cmd}`
+      const execCmd = [nodeEnv.path, ...cmdArgs]
       $.verbose = true
       console.log({execCmd})
-      const execRes = await $`cd / && ${execCmd}`
+      const { exitCode, stdout } = await $`${execCmd}`
       $.verbose = false
 
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ data: execRes }));
+      res.end(JSON.stringify({ exitCode, stdout }));
       break;
     default:
       res.writeHead(404, { 'Content-Type': 'application/json' });
